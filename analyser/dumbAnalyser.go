@@ -1,105 +1,126 @@
 package analyser
 
-var (
-	// a dumb map between the searchable string, and some keywords to find in the tweet
-	categories = make(map[string][]string)
+import (
+	"strings"
 )
 
-func init() {
+type DumbAnalyserImpl struct {
+	// a dumb map between the searchable string, and some keywords to find in the tweet
+	categories map[string][]string
+}
 
-	categories["gay rights"] = []string{"gay", "lesbian", "LGB", "LGBT"}
-	categories["smoking bans"] = []string{"smoking ban"}
-	categories["marriage"] = []string{"gay marriage", "marriage", "same sex"} // allowing marriage between two people of same sex
-	categories["equality and human rights"] = []string{"equality", "human rights"}
-	categories["terminally ill people assistance to end their life"] = []string{"euthenasia"}
-	categories["UK military forces"] = []string{"military intervention", "peacekeeping"} //use of UK military forces in combat operations overseas
-	categories["investigations"] = []string{"iraq", "iraq war"}                          //investigations into the Iraq war
-	categories["Trident"] = []string{"trident", "WMD", "nuclear weapons"}
-	categories["EU integration"] = []string{"eu integration"}       // eu integration
-	categories["EU"] = []string{"eu referendum"}                    //referendum on the UK's membership of the EU
-	categories["Military Covenant"] = []string{"Military Covenant"} //strengthening the Military Covenant
-	categories["right to remain for EU nationals"] = []string{"EU national", "right to remain"}
-	categories["UK membership of the EU"] = []string{"EU", "brexit"}
-	categories["military action against ISIL (Daesh)"] = []string{"ISIL"}
-	categories["housing benefit"] = []string{"bedroom tax", "housing benefit"} // bedroom tax
-	categories["welfare benefits"] = []string{"welfare", "benefits"}           //raising welfare benefits at least in line with prices
-	categories["illness or disability"] = []string{"disability benefits"}      //paying higher benefits over longer periods for those unable to work due to illness or disability
+// GetCategory takes a message, and tries to deduce
+func (da *DumbAnalyserImpl) GetCategory(message string) (cat string, confidence int) {
+
+	for k, v := range da.categories {
+		for _, keyword := range v {
+			if strings.Contains(message, keyword) {
+				return k, 90
+			}
+		}
+	}
+	return "", 0
+}
+
+// creates a new dumb analyser
+func NewDumbAnalyser() DumbAnalyserImpl {
+	da := DumbAnalyserImpl{}
+	da.categories = make(map[string][]string)
+	da.categories["gay rights"] = []string{"gay", "lesbian", "LGB", "LGBT"}
+	da.categories["smoking bans"] = []string{"smoking ban"}
+	da.categories["marriage"] = []string{"gay marriage", "same sex"} // allowing marriage between two people of same sex
+	da.categories["equality and human rights"] = []string{"equality", "human rights"}
+
+	da.categories["terminally ill people assistance to end their life"] = []string{"euthenasia"}
+	da.categories["UK military forces"] = []string{"military intervention", "peacekeeping"} //use of UK military forces in combat operations overseas
+	da.categories["investigations"] = []string{"iraq", "iraq war"}                          //investigations into the Iraq war
+	da.categories["Trident"] = []string{"trident", "WMD", "nuclear weapons"}
+	da.categories["EU integration"] = []string{"eu integration"}       // eu integration
+	da.categories["EU"] = []string{"eu referendum", "euref"}           //referendum on the UK's membership of the EU
+	da.categories["Military Covenant"] = []string{"Military Covenant"} //strengthening the Military Covenant
+	da.categories["right to remain for EU nationals"] = []string{"EU national", "right to remain", "expat"}
+	da.categories["UK membership of the EU"] = []string{"EU", "brexit"}
+	da.categories["military action against ISIL (Daesh)"] = []string{"ISIL", "Daesh"}
+	da.categories["housing benefit"] = []string{"bedroom tax", "housing benefit"} // bedroom tax
+	da.categories["welfare benefits"] = []string{"welfare", "benefits"}           //raising welfare benefits at least in line with prices
+	da.categories["illness or disability"] = []string{"disability benefits"}      //paying higher benefits over longer periods for those unable to work due to illness or disability
 	/*
-		categories["financial need council tax"] = []string{}                      //making local councils responsible for helping those in financial need afford their council tax and reducing the amount spent on such support
-		categories["welfare benefits"] = []string{}
-		categories["guaranteed jobs for young people"] = []string{}
-		categories["income tax"] = []string{}
-		categories["rate of VAT"] = []string{}
-		categories["alcoholic drinks"] = []string{}
-		categories["taxes on plane tickets"] = []string{}
-		categories["fuel for motor vehicles"] = []string{}
-		categories["income over £150,000"] = []string{}
-		categories["occupational pensions"] = []string{}
-		categories["occupational pensions"] = []string{}
-		categories["banker’s bonus tax"] = []string{}
-		categories["taxes on banks"] = []string{}
-		categories["mansion tax"] = []string{}
-		categories["rights for shares"] = []string{}
-		categories["regulation of trade union activity"] = []string{}
-		categories["capital gains tax"] = []string{}
-		categories["corporation tax"] = []string{}
-		categories["tax avoidance"] = []string{}
-		categories["incentives for companies to invest"] = []string{}
-		categories["high speed rail"] = []string{}
-		categories["private patients"] = []string{}
-		categories["NHS"] = []string{}
-		categories["smoking bans"] = []string{}
-		categories["terminally ill people assistance to end their life"] = []string{}
-		categories["autonomy for schools"] = []string{}
-		categories["undergraduate tuition fee"] = []string{}
-		categories["academy schools"] = []string{}
-		categories["financial support"] = []string{}
-		categories["tuition fees"] = []string{}
-		categories["funding of local government"] = []string{}
-		categories["equal number of electors"] = []string{}
-		categories["fewer MPs"] = []string{}
-		categories["proportional system"] = []string{}
-		categories["wholly elected"] = []string{}
-		categories["taxes on business premises"] = []string{}
-		categories["campaigning by third parties"] = []string{}
-		categories["fixed periods between parliamentary elections"] = []string{}
-		categories["hereditary peers"] = []string{}
-		categories["more powers to the Welsh Assembly"] = []string{}
-		categories["more powers to the Scottish Parliament"] = []string{}
-		categories["powers for local councils"] = []string{}
-		categories["a veto for MPs over laws specifically impacting their part of the UK"] = []string{}
-		categories["voting age"] = []string{}
-		categories["stricter asylum system"] = []string{}
-		categories["Police and Crime Commissioners"] = []string{}
-		categories["retention of information about communications"] = []string{}
-		categories["enforcement of immigration rules"] = []string{}
-		categories["mass surveillance"] = []string{}
-		categories["merging police and fire services"] = []string{}
-		categories["prevent climate change"] = []string{}
-		categories["fuel for motor vehicles"] = []string{}
-		categories["forests"] = []string{}
-		categories["taxes on plane tickets"] = []string{}
-		categories["low carbon electricity generation"] = []string{}
-		categories["culling badgers"] = []string{}
-		categories["hydraulic fracturing (fracking)"] = []string{}
-		categories["high speed rail"] = []string{}
-		categories["bus services"] = []string{}
-		categories["rail fares"] = []string{}
-		categories["fuel for motor vehicles"] = []string{}
-		categories["taxes on plane tickets"] = []string{}
-		categories["publicly owned railway system"] = []string{}
-		categories["secure tenancies for life"] = []string{}
-		categories["market rent to high earners renting a council home"] = []string{}
-		categories["regulation of gambling"] = []string{}
-		categories["civil service redundancy payments"] = []string{}
-		categories["anti-terrorism laws"] = []string{}
-		categories["Royal Mail"] = []string{}
-		categories["pub landlords rent-only leases"] = []string{}
-		categories["legal aid"] = []string{}
-		categories["courts in secret sessions"] = []string{}
-		categories["register of lobbyists"] = []string{}
-		categories["fees no-win no fee cases"] = []string{}
-		categories["fees letting agents"] = []string{}
-		categories["Conservative - Liberal Democrat Coalition Agreement"] = []string{}
+		da.categories["financial need council tax"] = []string{}                      //making local councils responsible for helping those in financial need afford their council tax and reducing the amount spent on such support
+		da.categories["welfare benefits"] = []string{}
+		da.categories["guaranteed jobs for young people"] = []string{}
+		da.categories["income tax"] = []string{}
+		da.categories["rate of VAT"] = []string{}
+		da.categories["alcoholic drinks"] = []string{}
+		da.categories["taxes on plane tickets"] = []string{}
+		da.categories["fuel for motor vehicles"] = []string{}
+		da.categories["income over £150,000"] = []string{}
+		da.categories["occupational pensions"] = []string{}
+		da.categories["occupational pensions"] = []string{}
+		da.categories["banker’s bonus tax"] = []string{}
+		da.categories["taxes on banks"] = []string{}
+		da.categories["mansion tax"] = []string{}
+		da.categories["rights for shares"] = []string{}
+		da.categories["regulation of trade union activity"] = []string{}
+		da.categories["capital gains tax"] = []string{}
+		da.categories["corporation tax"] = []string{}
+		da.categories["tax avoidance"] = []string{}
+		da.categories["incentives for companies to invest"] = []string{}
+		da.categories["high speed rail"] = []string{}
+		da.categories["private patients"] = []string{}
+		da.categories["NHS"] = []string{}
+		da.categories["smoking bans"] = []string{}
+		da.categories["terminally ill people assistance to end their life"] = []string{}
+		da.categories["autonomy for schools"] = []string{}
+		da.categories["undergraduate tuition fee"] = []string{}
+		da.categories["academy schools"] = []string{}
+		da.categories["financial support"] = []string{}
+		da.categories["tuition fees"] = []string{}
+		da.categories["funding of local government"] = []string{}
+		da.categories["equal number of electors"] = []string{}
+		da.categories["fewer MPs"] = []string{}
+		da.categories["proportional system"] = []string{}
+		da.categories["wholly elected"] = []string{}
+		da.categories["taxes on business premises"] = []string{}
+		da.categories["campaigning by third parties"] = []string{}
+		da.categories["fixed periods between parliamentary elections"] = []string{}
+		da.categories["hereditary peers"] = []string{}
+		da.categories["more powers to the Welsh Assembly"] = []string{}
+		da.categories["more powers to the Scottish Parliament"] = []string{}
+		da.categories["powers for local councils"] = []string{}
+		da.categories["a veto for MPs over laws specifically impacting their part of the UK"] = []string{}
+		da.categories["voting age"] = []string{}
+		da.categories["stricter asylum system"] = []string{}
+		da.categories["Police and Crime Commissioners"] = []string{}
+		da.categories["retention of information about communications"] = []string{}
+		da.categories["enforcement of immigration rules"] = []string{}
+		da.categories["mass surveillance"] = []string{}
+		da.categories["merging police and fire services"] = []string{}
+		da.categories["prevent climate change"] = []string{}
+		da.categories["fuel for motor vehicles"] = []string{}
+		da.categories["forests"] = []string{}
+		da.categories["taxes on plane tickets"] = []string{}
+		da.categories["low carbon electricity generation"] = []string{}
+		da.categories["culling badgers"] = []string{}
+		da.categories["hydraulic fracturing (fracking)"] = []string{}
+		da.categories["high speed rail"] = []string{}
+		da.categories["bus services"] = []string{}
+		da.categories["rail fares"] = []string{}
+		da.categories["fuel for motor vehicles"] = []string{}
+		da.categories["taxes on plane tickets"] = []string{}
+		da.categories["publicly owned railway system"] = []string{}
+		da.categories["secure tenancies for life"] = []string{}
+		da.categories["market rent to high earners renting a council home"] = []string{}
+		da.categories["regulation of gambling"] = []string{}
+		da.categories["civil service redundancy payments"] = []string{}
+		da.categories["anti-terrorism laws"] = []string{}
+		da.categories["Royal Mail"] = []string{}
+		da.categories["pub landlords rent-only leases"] = []string{}
+		da.categories["legal aid"] = []string{}
+		da.categories["courts in secret sessions"] = []string{}
+		da.categories["register of lobbyists"] = []string{}
+		da.categories["fees no-win no fee cases"] = []string{}
+		da.categories["fees letting agents"] = []string{}
+		da.categories["Conservative - Liberal Democrat Coalition Agreement"] = []string{}
 	*/
+	return da
 }
